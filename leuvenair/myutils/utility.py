@@ -1,5 +1,6 @@
 # imports
 import json
+import pandas as pd
 import numpy as np
 
 def readJson():
@@ -64,6 +65,27 @@ def readJson():
     fields['WOODSTOVES'] = WOODSTOVES
     fields['TRAFFIC'] = TRAFFIC
     fields['SVL'] = SVL
-    fields['NO2_CN'] = NO2_CN    
+    fields['NO2_CN'] = NO2_CN  
+    
+    print('Note: sensors 8799 and 8827 are repeated in the json file!')
     
     return fields
+
+def getSensorData():
+    fields = readJson()
+    allSensors = fields['SDS011ID']
+    dframe = pd.read_csv('LEUVENAIRfulldump2018.csv', skiprows=0, nrows = None, usecols = None)
+    print('The complete pandas frame has shape ',dframe.values.shape)
+    fields = {}
+    numval = 0
+    for sensor in np.unique(allSensors):
+        df = dframe.loc[dframe['SDS011ID'] == sensor]
+        fields[str(sensor)] = df.values
+        numval = numval + df.values.shape[0]
+        print('Rows and columns for ',sensor,' = ',df.values.shape)
+    print('Total observations across all sensors = ',numval)
+    return fields
+        
+        
+        
+		
