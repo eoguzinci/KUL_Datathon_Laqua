@@ -5,7 +5,16 @@ import numpy as np
 from scipy import interpolate
 
 def readJson():
+    """
+    Converts the tabular overview of the LEUVENAIR sensors (downloadable as a JSON file) into ndarray.
+    Source: https://data.leuvenair.be/meta-l.html
     
+    Arguments:
+        None
+    
+    Returns:
+        fields -- python dictionary containing ndarray corresponding to all the 15 fields (except GMAPS and MADAVI)
+    """
     with open('LEUVENAIRmeta_final.json') as json_file:
         data = json.load(json_file)
         numrows = len(data)
@@ -73,6 +82,15 @@ def readJson():
     return fields
 
 def getSensorData():
+    """
+    Parses the complete data dump to extract data corresponding to each sensor
+    
+    Arguments:
+        None
+    
+    Returns:
+        fields -- python dictionary containing ndarray corresponding to each sensor
+    """
     fields = readJson()
     allSensors = fields['SDS011ID']
     dframe = pd.read_csv('LEUVENAIRfulldump2018.csv', skiprows=0, nrows = None, usecols = None)
@@ -106,29 +124,39 @@ def interpolate1D(x,y,xnew):
     f = interpolate.interp1d(x,y)
     return f(xnew)
     
-def getSensorInterpolatedAvg(fields,tmin='2018-04-01 16:00:00',tmax='2018-04-01 20:00:00',fid=4,xmin=0,dx=1,xmax=240):
-    baseline = np.arange(xmin,xmax+dx,dx)
+def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04-01 20:00:00',fid=4):
+    """
+    The function reads sensor data and interpolates from a non-uniformly sampled data (in time) to uniformly spaced
+    data in time. This is particularly useful for taking mean, median etc across sever sensor data
+    
+    Arguments:
+        fields -- python dictionary containing ndarray corresponding to each sensor
+        tstart --  starting time point
+        tstop -- stopping time point
+        fid -- field index (for example for PM2.5 index is 4)
+        
+    Returns:
+        baseline -- the uniformly spaced array on which data is interpolated
+        interpVal -- the corressponding interpolated values    
+    """
+    dt = pd.to_datetime(tstop)-pd.to_datetime(tstart)
+    print('Extracting data over duration ',dt,' starting at ',pd.to_datetime(tstart))
+    xmin = 0; xmax = dt.total_seconds()/60 # convert into minutes;
+    dx = 1 # 2 minute resolution
+    print('Sampling resolution = ',dx,' minute')
+    baseline = np.arange(xmin,xmax,dx)
     interpVal = np.zeros((len(fields),baseline.shape[0]),dtype=np.float64)
-    numvalidrows = 0
     for row,sensor in enumerate(fields):
         #print('Processing data for sensor',str(sensor))
         sdata = fields[str(sensor)]
         timeUTC = sdata[:,0]; PM25 = sdata[:,fid];
-        flag = ((timeUTC>tmin) & (timeUTC<tmax))
+        flag = ((timeUTC>tstart) & (timeUTC<tstop))
         timeUTC_April = timeUTC[flag]; PM25_April = PM25[flag];
         if(timeUTC_April.shape[0]>0):
-            numvalidrows = numvalidrows+1
             timeUTC_April = pd.to_datetime(timeUTC_April)
             deltaTime = timeUTC_April-timeUTC_April[0]
             X = deltaTime.astype('timedelta64[m]')
             Y = PM25_April
-            func = interpolate.interp1d(X,Y,bounds_error=False,fill_value=Y[-1])
+            func = interpolate.interp1d(X,Y,bounds_error=False,fill_value=0)
             interpVal[row,:] = func(baseline)
-    return baseline.reshape((1,baseline.shape[0])), interpVal    
-    
-        
-    
-        
-            
-        
-		
+    return baseline.reshape((1,baseline.shape[0])), interpVal
