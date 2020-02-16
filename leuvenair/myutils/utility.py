@@ -2,6 +2,7 @@
 import json
 import pandas as pd
 import numpy as np
+from scipy import interpolate
 
 def readJson():
     
@@ -82,10 +83,52 @@ def getSensorData():
         df = dframe.loc[dframe['SDS011ID'] == sensor]
         fields[str(sensor)] = df.values
         numval = numval + df.values.shape[0]
-        print('Rows and columns for ',sensor,' = ',df.values.shape)
+        timeOfsensor = pd.to_datetime(df.values[:,0])
+        
+#        datetime = pd.to_datetime(np.squeeze(df.values[:,0]))
+#        seconds = datetime.second
+#        minutes = datetime.minute
+#        hours = datetime.hour
+#        days = datetime.day
+#        weeks = datetime.week
+#        months = datetime.month
+#        years = datetime.year
+
+        dt = np.diff(timeOfsensor).astype('timedelta64[m]')
+        if(df.values.shape[0]==0):
+            print('sensor:',sensor,'did not record any observation.')
+        else:
+            print('sensor:',sensor,' 1st obs:',timeOfsensor[0],' last:',timeOfsensor[-1],' median dt: ', np.median(dt).astype(int),' min, total obs:',df.values.shape[0])
     print('Total observations across all sensors = ',numval)
     return fields
         
+def interpolate1D(x,y,xnew):
+    f = interpolate.interp1d(x,y)
+    return f(xnew)
+    
+def getSensorInterpolatedAvg(fields,tmin='2018-04-01 16:00:00',tmax='2018-04-01 20:00:00',fid=4,xmin=0,dx=1,xmax=240):
+    baseline = np.arange(xmin,xmax+dx,dx)
+    interpVal = np.zeros((len(fields),baseline.shape[0]),dtype=np.float64)
+    numvalidrows = 0
+    for row,sensor in enumerate(fields):
+        #print('Processing data for sensor',str(sensor))
+        sdata = fields[str(sensor)]
+        timeUTC = sdata[:,0]; PM25 = sdata[:,fid];
+        flag = ((timeUTC>tmin) & (timeUTC<tmax))
+        timeUTC_April = timeUTC[flag]; PM25_April = PM25[flag];
+        if(timeUTC_April.shape[0]>0):
+            numvalidrows = numvalidrows+1
+            timeUTC_April = pd.to_datetime(timeUTC_April)
+            deltaTime = timeUTC_April-timeUTC_April[0]
+            X = deltaTime.astype('timedelta64[m]')
+            Y = PM25_April
+            func = interpolate.interp1d(X,Y,bounds_error=False,fill_value=Y[-1])
+            interpVal[row,:] = func(baseline)
+    return baseline.reshape((1,baseline.shape[0])), interpVal    
+    
         
+    
+        
+            
         
 		
