@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from scipy import interpolate
 
-def readJson():
+def readJson(filename):
     """
     Converts the tabular overview of the LEUVENAIR sensors (downloadable as a JSON file) into ndarray.
     Source: https://data.leuvenair.be/meta-l.html
@@ -15,7 +15,7 @@ def readJson():
     Returns:
         fields -- python dictionary containing ndarray corresponding to all the 15 fields (except GMAPS and MADAVI)
     """
-    with open('LEUVENAIRmeta_final.json') as json_file:
+    with open(filename) as json_file:
         data = json.load(json_file)
         numrows = len(data)
 
