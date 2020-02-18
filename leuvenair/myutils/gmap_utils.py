@@ -4,12 +4,12 @@
 import gmaps
 import numpy as np
 
-def get_gmap_figure(LAT, LON):
+def get_gmap_figure(LAT, LON, filename = 'apikey.txt'):
 
 	# Reference: https://jupyter-gmaps.readthedocs.io/en/latest/tutorial.html#basic-concepts
 
 	# read google maps API
-	with open('apikey.txt') as f:
+	with open(filename) as f:
 		my_api_key = f.readline()
 		f.close
 

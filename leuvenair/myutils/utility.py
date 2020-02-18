@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import numpy as np
 from scipy import interpolate
+from ..myutils.gmap_utils import get_gmap_figure
 
 def readJson(filename='./LEUVENAIRmeta_final.json'):
     """
@@ -83,7 +84,7 @@ def readJson(filename='./LEUVENAIRmeta_final.json'):
     
     return fields
 
-def getSensorData(filename='./LEUVENAIRfulldump2018.csv'):
+def getSensorData(filename_json = './LEUVENAIRmeta_final.json', filename='./LEUVENAIRfulldump2018.csv'):
     """
     Parses the complete data dump to extract data corresponding to each sensor
     
@@ -93,7 +94,7 @@ def getSensorData(filename='./LEUVENAIRfulldump2018.csv'):
     Returns:
         fields -- python dictionary containing ndarray corresponding to each sensor
     """
-    fields = readJson()
+    fields = readJson(filename_json)
     allSensors = fields['SDS011ID']
     dframe = pd.read_csv(filename, skiprows=0, nrows = None, usecols = None)
     dframe = dframe.sort_values(['SDS011ID', 'DATEUTC'], ascending=[True, True])
@@ -144,6 +145,7 @@ def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04
         baseline -- the uniformly spaced array on which data is interpolated
         interpVal -- the corressponding interpolated values    
     """
+    
     dt = pd.to_datetime(tstop)-pd.to_datetime(tstart)
     print('Extracting data over duration ',dt,' starting at ',pd.to_datetime(tstart))
     xmin = 0; xmax = dt.total_seconds()/60 # convert into minutes;
@@ -164,4 +166,5 @@ def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04
             Y = PM25_April
             func = interpolate.interp1d(X,Y,bounds_error=False,fill_value=0)
             interpVal[row,:] = func(baseline)
-    return baseline.reshape((1,baseline.shape[0])), interpVal
+    return baseline.reshape((1,baseline.shape[0])), interpVal  
+    
