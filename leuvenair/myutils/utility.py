@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from scipy import interpolate
 
-def readJson(filename):
+def readJson(filename='./LEUVENAIRmeta_final.json'):
     """
     Converts the tabular overview of the LEUVENAIR sensors (downloadable as a JSON file) into
     ndarray.
@@ -83,7 +83,7 @@ def readJson(filename):
     
     return fields
 
-def getSensorData():
+def getSensorData(filename='./LEUVENAIRfulldump2018.csv'):
     """
     Parses the complete data dump to extract data corresponding to each sensor
     
@@ -93,9 +93,9 @@ def getSensorData():
     Returns:
         fields -- python dictionary containing ndarray corresponding to each sensor
     """
-    fields = readJson('./LEUVENAIRmeta_final.json')
+    fields = readJson()
     allSensors = fields['SDS011ID']
-    dframe = pd.read_csv('./LEUVENAIRfulldump2018.csv', skiprows=0, nrows = None, usecols = None)
+    dframe = pd.read_csv(filename, skiprows=0, nrows = None, usecols = None)
     dframe = dframe.sort_values(['SDS011ID', 'DATEUTC'], ascending=[True, True])
     print('The complete pandas frame has shape ',dframe.values.shape)
     fields = {}
@@ -147,7 +147,7 @@ def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04
     dt = pd.to_datetime(tstop)-pd.to_datetime(tstart)
     print('Extracting data over duration ',dt,' starting at ',pd.to_datetime(tstart))
     xmin = 0; xmax = dt.total_seconds()/60 # convert into minutes;
-    dx = 1 # 2 minute resolution
+    dx = 1 # 1 minute resolution
     print('Sampling resolution = ',dx,' minute')
     baseline = np.arange(xmin,xmax,dx)
     interpVal = np.zeros((len(fields),baseline.shape[0]),dtype=np.float64)
