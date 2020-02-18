@@ -6,14 +6,16 @@ from scipy import interpolate
 
 def readJson(filename):
     """
-    Converts the tabular overview of the LEUVENAIR sensors (downloadable as a JSON file) into ndarray.
+    Converts the tabular overview of the LEUVENAIR sensors (downloadable as a JSON file) into
+    ndarray.
     Source: https://data.leuvenair.be/meta-l.html
     
     Arguments:
         None
     
     Returns:
-        fields -- python dictionary containing ndarray corresponding to all the 15 fields (except GMAPS and MADAVI)
+        fields -- python dictionary containing ndarray corresponding to all the 15 fields
+        (except GMAPS and MADAVI)
     """
     with open(filename) as json_file:
         data = json.load(json_file)
@@ -91,9 +93,10 @@ def getSensorData():
     Returns:
         fields -- python dictionary containing ndarray corresponding to each sensor
     """
-    fields = readJson()
+    fields = readJson('./LEUVENAIRmeta_final.json')
     allSensors = fields['SDS011ID']
-    dframe = pd.read_csv('LEUVENAIRfulldump2018.csv', skiprows=0, nrows = None, usecols = None)
+    dframe = pd.read_csv('./LEUVENAIRfulldump2018.csv', skiprows=0, nrows = None, usecols = None)
+    dframe = dframe.sort_values(['SDS011ID', 'DATEUTC'], ascending=[True, True])
     print('The complete pandas frame has shape ',dframe.values.shape)
     fields = {}
     numval = 0
@@ -116,7 +119,8 @@ def getSensorData():
         if(df.values.shape[0]==0):
             print('sensor:',sensor,'did not record any observation.')
         else:
-            print('sensor:',sensor,' 1st obs:',timeOfsensor[0],' last:',timeOfsensor[-1],' median dt: ', np.median(dt).astype(int),' min, total obs:',df.values.shape[0])
+            print('sensor:',sensor,' 1st obs:',timeOfsensor[0],' last:',timeOfsensor[-1],end='')
+            print(' median dt: ', np.median(dt).astype(int),' min, total obs:',df.values.shape[0])
     print('Total observations across all sensors = ',numval)
     return fields
         
@@ -126,7 +130,8 @@ def interpolate1D(x,y,xnew):
     
 def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04-01 20:00:00',fid=4):
     """
-    The function reads sensor data and interpolates from a non-uniformly sampled data (in time) to uniformly spaced
+    The function reads sensor data and interpolates from a non-uniformly sampled data (in time) to
+    uniformly spaced
     data in time. This is particularly useful for taking mean, median etc across sever sensor data
     
     Arguments:
