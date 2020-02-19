@@ -83,7 +83,7 @@ def readJson(filename='./LEUVENAIRmeta_final.json'):
     
     return fields
 
-def getSensorData(filename_json = './LEUVENAIRmeta_final.json', filename='./LEUVENAIRfulldump2018.csv'):
+def getSensorData(filename_json = './LEUVENAIRmeta_final.json', filename='./LEUVENAIRfulldump2019.csv'):
     """
     Parses the complete data dump to extract data corresponding to each sensor
     
@@ -128,7 +128,7 @@ def interpolate1D(x,y,xnew):
     f = interpolate.interp1d(x,y)
     return f(xnew)
     
-def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04-01 20:00:00',fid=4):
+def getSensorInterpolatedData(fields,tstart='2019-03-31 16:00:00',tstop='2019-04-01 20:00:00',fid=4):
     """
     The function reads sensor data and interpolates from a non-uniformly sampled data (in time) to
     uniformly spaced data in time. This is particularly useful for taking mean, median etc across
@@ -158,7 +158,7 @@ def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04
         timeUTC = sdata[:,0]; PM25 = sdata[:,fid];
         flag = ((timeUTC>tstart) & (timeUTC<tstop))
         timeUTC_April = timeUTC[flag]; PM25_April = PM25[flag];
-        if(timeUTC_April.shape[0]>0):
+        if(timeUTC_April.shape[0]>1):
             timeUTC_April = pd.to_datetime(timeUTC_April)
             deltaTime = timeUTC_April-timeUTC_April[0]
             X = deltaTime.astype('timedelta64[m]') # convert into minutes
@@ -166,4 +166,36 @@ def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04
             func = interpolate.interp1d(X,Y,bounds_error=False,fill_value=0)
             interpVal[row,:] = func(baseline)
     return baseline.reshape((1,baseline.shape[0])), interpVal  
+
+def find_event(fields, startmonth=1, stopmonth=13, startday=1, stopday=30):
+    """
+    This function loops over a range of days (and months). The time step is 1 day.
+    It computes min, max, standard deviation and average of the pollutant PM2.5
+    over the duration of time step (of the median values across all sensors).
     
+    Arguments:
+        
+    Returns:
+        eventdict: a dict which can be accessed via key of form day-month
+        fullmatrix: a numpy array containing all the statistics
+        It also 
+    """
+    eventdict = {}
+    fullmatrix = np.empty(shape=(0,7))
+    itr = 0
+    for month in range(startmonth,stopmonth):
+        fmonth = "{:02d}".format(month)
+        for day in range(startday,stopday):
+            fday = "{:02d}".format(day)
+            fdayplus = "{:02d}".format(day+1)
+            start = str('2019-')+str(fmonth)+'-'+str(fday)+'  00:00:00'
+            stop = str('2019-')+str(fmonth)+'-'+str(fdayplus)+'  00:00:00'
+            X, Y = getSensorInterpolatedData(fields, tstart=start, tstop=stop, fid=4)
+            temp = np.squeeze(np.nanmedian(Y,axis=0))
+            print('start time = ',start,' stop time = ',stop)
+            print('Min = ',np.min(temp),'Max = ',np.max(temp),'Standard deviation = ',np.std(temp),'Mean  = ',np.mean(temp))
+            arr = np.array([itr, day, month, np.min(temp), np.max(temp), np.std(temp), np.mean(temp)]).reshape(1,7)
+            eventdict[str(day)+'-'+str(month)] = arr
+            fullmatrix = np.append(fullmatrix, arr, axis = 0)
+            itr = itr+1
+    return eventdict, fullmatrix
