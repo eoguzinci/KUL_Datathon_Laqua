@@ -3,7 +3,6 @@ import json
 import pandas as pd
 import numpy as np
 from scipy import interpolate
-from ..myutils.gmap_utils import get_gmap_figure
 
 def readJson(filename='./LEUVENAIRmeta_final.json'):
     """
@@ -132,8 +131,8 @@ def interpolate1D(x,y,xnew):
 def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04-01 20:00:00',fid=4):
     """
     The function reads sensor data and interpolates from a non-uniformly sampled data (in time) to
-    uniformly spaced
-    data in time. This is particularly useful for taking mean, median etc across sever sensor data
+    uniformly spaced data in time. This is particularly useful for taking mean, median etc across
+    several sensor data.
     
     Arguments:
         fields -- python dictionary containing ndarray corresponding to each sensor
@@ -146,12 +145,12 @@ def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04
         interpVal -- the corressponding interpolated values    
     """
     
-    dt = pd.to_datetime(tstop)-pd.to_datetime(tstart)
-    print('Extracting data over duration ',dt,' starting at ',pd.to_datetime(tstart))
-    xmin = 0; xmax = dt.total_seconds()/60 # convert into minutes;
-    dx = 1 # 1 minute resolution
-    print('Sampling resolution = ',dx,' minute')
-    baseline = np.arange(xmin,xmax,dx)
+    deltaT = pd.to_datetime(tstop)-pd.to_datetime(tstart)
+    print('Extracting data over duration ',deltaT,' starting at ',pd.to_datetime(tstart))
+    tmin = 0; tmax = deltaT.total_seconds()/60 # convert into minutes;
+    dt = 1 # 1 minute resolution
+    print('Sampling resolution = ',dt,' minute')
+    baseline = np.arange(tmin,tmax,dt)
     interpVal = np.zeros((len(fields),baseline.shape[0]),dtype=np.float64)
     for row,sensor in enumerate(fields):
         #print('Processing data for sensor',str(sensor))
@@ -162,7 +161,7 @@ def getSensorInterpolatedData(fields,tstart='2018-03-31 16:00:00',tstop='2018-04
         if(timeUTC_April.shape[0]>0):
             timeUTC_April = pd.to_datetime(timeUTC_April)
             deltaTime = timeUTC_April-timeUTC_April[0]
-            X = deltaTime.astype('timedelta64[m]')
+            X = deltaTime.astype('timedelta64[m]') # convert into minutes
             Y = PM25_April
             func = interpolate.interp1d(X,Y,bounds_error=False,fill_value=0)
             interpVal[row,:] = func(baseline)
