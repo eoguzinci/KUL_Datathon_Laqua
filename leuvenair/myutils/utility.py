@@ -165,7 +165,8 @@ def getSensorInterpolatedData(fields,tstart='2019-03-31 16:00:00',tstop='2019-04
             Y = PM25_April
             func = interpolate.interp1d(X,Y,bounds_error=False,fill_value=0)
             interpVal[row,:] = func(baseline)
-    return baseline.reshape((1,baseline.shape[0])), interpVal  
+    xaxis = pd.to_datetime(tstart)+pd.to_timedelta(list(baseline), unit='m')
+    return baseline.reshape((1,baseline.shape[0])), interpVal, xaxis  
 
 def find_event(fields, startmonth=1, stopmonth=13, startday=1, stopday=30):
     """
@@ -190,7 +191,7 @@ def find_event(fields, startmonth=1, stopmonth=13, startday=1, stopday=30):
             fdayplus = "{:02d}".format(day+1)
             start = str('2019-')+str(fmonth)+'-'+str(fday)+'  00:00:00'
             stop = str('2019-')+str(fmonth)+'-'+str(fdayplus)+'  00:00:00'
-            X, Y = getSensorInterpolatedData(fields, tstart=start, tstop=stop, fid=4)
+            X, Y, xaxis = getSensorInterpolatedData(fields, tstart=start, tstop=stop, fid=4)
             temp = np.squeeze(np.nanmedian(Y,axis=0))
             print('start time = ',start,' stop time = ',stop)
             print('Min = ',np.min(temp),'Max = ',np.max(temp),'Standard deviation = ',np.std(temp),'Mean  = ',np.mean(temp))
