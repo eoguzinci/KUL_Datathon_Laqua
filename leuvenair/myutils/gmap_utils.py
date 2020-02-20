@@ -49,5 +49,5 @@ def get_gmap_figure(LAT, LON, filename = 'apikey.txt'):
 
 def get_closest_idx(LAT, LON, LAT_star=50.8798, LON_star=4.7005):
     dists = (LAT-LAT_star)**2 + (LON-LON_star)**2
-    idx_star = dists.argmin()
+    idx_star = np.argsort(dists)
     return idx_star
