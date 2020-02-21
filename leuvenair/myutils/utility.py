@@ -1,7 +1,7 @@
 # imports
 import json
-import pandas as pd
 import numpy as np
+import pandas as pd
 from scipy import interpolate
 
 def readJson(filename='./LEUVENAIRmeta_final.json'):
@@ -11,7 +11,7 @@ def readJson(filename='./LEUVENAIRmeta_final.json'):
     Source: https://data.leuvenair.be/meta-l.html
     
     Arguments:
-        None
+        filename -- Path of json file to be read
     
     Returns:
         fields -- python dictionary containing ndarray corresponding to all the 15 fields
@@ -88,7 +88,8 @@ def getSensorData(filename_json = './LEUVENAIRmeta_final.json', filename='./LEUV
     Parses the complete data dump to extract data corresponding to each sensor
     
     Arguments:
-        None
+        filename_json -- Path of json file to be read
+        filename -- Path of .csv file to be read
     
     Returns:
         fields -- python dictionary containing ndarray corresponding to each sensor
@@ -142,7 +143,8 @@ def getSensorInterpolatedData(fields,tstart='2019-03-31 16:00:00',tstop='2019-04
         
     Returns:
         baseline -- the uniformly spaced array on which data is interpolated
-        interpVal -- the corressponding interpolated values    
+        interpVal -- the corressponding interpolated values
+        xaxis  -- time as x axis
     """
     
     deltaT = pd.to_datetime(tstop)-pd.to_datetime(tstart)
@@ -175,11 +177,15 @@ def find_event(fields, startmonth=1, stopmonth=13, startday=1, stopday=30):
     over the duration of time step (of the median values across all sensors).
     
     Arguments:
+        fields -- python dictionary containing ndarray corresponding to each sensor
+        startmonth --  starting month
+        stopmonth -- one before last month
+        startday -- starting day
+        stopday -- one before last day
         
     Returns:
         eventdict: a dict which can be accessed via key of form day-month
         fullmatrix: a numpy array containing all the statistics
-        It also 
     """
     eventdict = {}
     fullmatrix = np.empty(shape=(0,7))
