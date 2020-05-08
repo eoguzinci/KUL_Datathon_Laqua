@@ -21,7 +21,7 @@ def readJson(filename='./LEUVENAIRmeta_final.json'):
         data = json.load(json_file)
         numrows = len(data)
 
-        # All integers
+        # For storing all integers
         SDS011ID = np.zeros(numrows,dtype=np.int)
         DHTID = np.zeros(numrows,dtype=np.int)
         EXPORT = np.zeros(numrows,dtype=np.int)
@@ -33,12 +33,12 @@ def readJson(filename='./LEUVENAIRmeta_final.json'):
         TRAFFIC = np.zeros(numrows,dtype=np.int)
         SVL = np.zeros(numrows,dtype=np.int)
 
-        # All floats
+        # For storing all floats
         LAT = np.zeros(numrows,dtype=np.float64)
         LON = np.zeros(numrows,dtype=np.float64)
         NO2_CN = np.zeros(numrows,dtype=np.float64)
 
-        # All strings
+        # For storing all strings
         STREET = []
         CITY = []
 
