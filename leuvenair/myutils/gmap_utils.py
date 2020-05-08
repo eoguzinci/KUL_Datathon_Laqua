@@ -6,7 +6,7 @@ import numpy as np
 
 def get_gmap_figure(LAT, LON, filename = 'apikey.txt'):
 
-    # Reference: https://jupyter-gmaps.readthedocs.io/en/latest/tutorial.html#basic-concepts
+    # Reference tutorial: https://jupyter-gmaps.readthedocs.io/en/latest/tutorial.html#basic-concepts
 
     # read google maps API
     with open(filename) as f:
