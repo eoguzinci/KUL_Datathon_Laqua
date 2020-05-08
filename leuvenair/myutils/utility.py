@@ -15,7 +15,7 @@ def readJson(filename='./LEUVENAIRmeta_final.json'):
     
     Returns:
         fields -- python dictionary containing ndarray corresponding to all the 15 fields
-        (except GMAPS and MADAVI)
+        (except for the fields GMAPS and MADAVI)
     """
     with open(filename) as json_file:
         data = json.load(json_file)
